@@ -3,7 +3,7 @@ from app.extensions import db, migrate, jwt
 from dotenv import load_dotenv
 
 def create_app():
-    load_dotenv()  # 👈 aquí dentro
+    load_dotenv()
 
     app = Flask(__name__)
     app.config.from_object("app.config.Config")
@@ -12,7 +12,20 @@ def create_app():
     migrate.init_app(app, db)
     jwt.init_app(app)
 
-    from app import models
+    # Importar modelos ANTES de usarlos
+    from app.models import User
+
+    # Crear tablas y usuario admin automáticamente
+    with app.app_context():
+        db.create_all()
+
+        if not User.query.filter_by(email="admin@festival.com").first():
+            u = User(email="admin@festival.com", role="admin")
+            u.set_password("123456")
+            db.session.add(u)
+            db.session.commit()
+
+    # Importar blueprints
     from app.routes.auth import auth_bp
     from app.routes.festivals import festivals_bp
     from app.routes.events import events_bp
@@ -22,7 +35,7 @@ def create_app():
     from app.routes.electrical_summary import summary_bp
     from app.routes.agreements import agreements_bp, public_agreements_bp
     from app.routes.main import main_bp
-    
+
     app.register_blueprint(auth_bp)
     app.register_blueprint(festivals_bp)
     app.register_blueprint(events_bp)
