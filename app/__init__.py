@@ -21,6 +21,7 @@ def create_app():
     from app.routes.equipment import equipment_bp
     from app.routes.electrical_summary import summary_bp
     from app.routes.agreements import agreements_bp, public_agreements_bp
+    from app.routes.main import main_bp
     
     app.register_blueprint(auth_bp)
     app.register_blueprint(festivals_bp)
@@ -31,5 +32,6 @@ def create_app():
     app.register_blueprint(summary_bp)
     app.register_blueprint(agreements_bp)
     app.register_blueprint(public_agreements_bp)
+    app.register_blueprint(main_bp)
 
     return app
