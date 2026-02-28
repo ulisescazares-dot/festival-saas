@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Registro - Festival SaaS</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #111827;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: white;
+        }
+
+        .card {
+            background: #1f2937;
+            padding: 40px;
+            border-radius: 10px;
+            width: 350px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #10b981;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #059669;
+        }
+
+        .error {
+            color: #f87171;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Crear cuenta</h2>
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
+    <button onclick="register()">Crear cuenta</button>
+    <div class="error" id="error"></div>
+</div>
+
+<script>
+async function register() {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    const res = await fetch("/auth/register", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({email, password})
+    });
+
+    const data = await res.json();
+
+    if (res.status !== 201) {
+        document.getElementById("error").innerText = data.msg;
+        return;
+    }
+
+    alert("Usuario creado correctamente");
+    window.location.href = "/auth/login-page";
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Panel Organizador</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+body { background:#f4f6f9; }
+.card { border:none; border-radius:14px; box-shadow:0 4px 14px rgba(0,0,0,0.06); }
+.badge-signed { background:#198754; }
+.badge-pending { background:#dc3545; }
+.badge-doc { background:#0d6efd; }
+.header-title { font-weight:700; font-size:22px; }
+</style>
+
+</head>
+<body>
+
+<div class="container py-4">
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="header-title">Panel de Expositores</div>
+    <button class="btn btn-dark" onclick="loadData()">Actualizar</button>
+</div>
+
+<div class="card p-3">
+<div class="table-responsive">
+<table class="table align-middle">
+<thead>
+<tr>
+<th>Festival</th>
+<th>Evento</th>
+<th>Expositor</th>
+<th>Email</th>
+<th>Firma</th>
+<th>Eléctrico</th>
+<th>Docs</th>
+<th>PDF</th>
+</tr>
+</thead>
+<tbody id="tableBody"></tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+<script>
+async function loadData() {
+
+    const token = localStorage.getItem("access_token");
+
+    const response = await fetch("/agreements/dashboard", {
+        headers: {
+            "Authorization": "Bearer " + token
+        }
+    });
+
+    if(!response.ok){
+        alert("No autorizado. Inicia sesión nuevamente.");
+        return;
+    }
+
+    const data = await response.json();
+
+    const tbody = document.getElementById("tableBody");
+    tbody.innerHTML = "";
+
+    data.forEach(row => {
+
+        const tr = document.createElement("tr");
+
+        const signedBadge = row.signed
+            ? `<span class="badge badge-signed">Firmado</span>`
+            : `<span class="badge badge-pending">Pendiente</span>`;
+
+        const electrical = row.total_amperage
+            ? `${row.total_amperage}A / ${row.voltage}V`
+            : "-";
+
+        const docsBadge = row.documents > 0
+            ? `<span class="badge badge-doc">${row.documents}</span>`
+            : "-";
+
+        const pdfBtn = row.signed
+            ? `<a class="btn btn-sm btn-outline-dark" href="${row.pdf_url}" target="_blank">Ver PDF</a>`
+            : "-";
+
+        tr.innerHTML = `
+            <td>${row.festival}</td>
+            <td>${row.event}</td>
+            <td><strong>${row.business_name || ""}</strong></td>
+            <td>${row.email || ""}</td>
+            <td>${signedBadge}</td>
+            <td>${electrical}</td>
+            <td>${docsBadge}</td>
+            <td>${pdfBtn}</td>
+        `;
+
+        tbody.appendChild(tr);
+    });
+}
+
+loadData();
+</script>
+
+</body>
+</html>
