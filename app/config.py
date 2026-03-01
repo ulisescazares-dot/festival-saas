@@ -9,7 +9,7 @@ class Config:
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=8)
 
     JWT_TOKEN_LOCATION = ["cookies"]
-    JWT_COOKIE_SECURE = False  # En producción será True
+    JWT_COOKIE_SECURE = True  # En producción será True
     JWT_COOKIE_CSRF_PROTECT = True
     JWT_CSRF_IN_COOKIES = True
     JWT_ACCESS_COOKIE_PATH = "/"
