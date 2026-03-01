@@ -102,6 +102,11 @@
 
 <script>
 
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+}
 async function showFestivalForm() {
     document.getElementById("dynamicSection").innerHTML = `
         <div class="card">
@@ -114,12 +119,19 @@ async function showFestivalForm() {
 }
 
 async function createFestival() {
+
+    const csrf = getCookie("csrf_access_token");
+
     const name = document.getElementById("festivalName").value;
     const description = document.getElementById("festivalDesc").value;
 
     const res = await fetch("/festivals", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        headers: { 
+            "Content-Type": "application/json",
+            "X-CSRF-TOKEN": csrf
+        },
         body: JSON.stringify({ name, description })
     });
 
@@ -144,13 +156,19 @@ async function showContestForm() {
 
 async function createContest() {
 
+    const csrf = getCookie("csrf_access_token");
+
     const festival_id = document.getElementById("festivalId").value;
     const name = document.getElementById("contestName").value;
     const description = document.getElementById("contestDesc").value;
 
     const res = await fetch("/admin/contests", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        headers: { 
+            "Content-Type": "application/json",
+            "X-CSRF-TOKEN": csrf
+        },
         body: JSON.stringify({
             festival_id,
             name,
