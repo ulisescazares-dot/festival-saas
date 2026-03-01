@@ -9,3 +9,4 @@ from .exhibitor_access_token import ExhibitorAccessToken
 from .exhibitor_agreement import ExhibitorAgreement
 from .exhibitor_document import ExhibitorDocument
 from .organization import Organization
+from .contest import Contest, ContestRegistration
