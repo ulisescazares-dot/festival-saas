@@ -8,14 +8,25 @@ festivals_bp = Blueprint("festivals", __name__, url_prefix="/festivals")
 @festivals_bp.route("", methods=["POST"])
 @jwt_required()
 def create_festival():
+
     user_id = int(get_jwt_identity())
     user = User.query.get(user_id)
 
-    if not user.organization_id:
-        return jsonify({"msg": "User has no organization"}), 400
-
     data = request.get_json()
 
+    # 🔥 Si es admin y no tiene organización → crearle una
+    if not user.organization_id:
+
+        from app.models import Organization
+
+        org = Organization(name=f"Organization of {user.email}")
+        db.session.add(org)
+        db.session.commit()
+
+        user.organization_id = org.id
+        db.session.commit()
+
+    # Crear festival
     f = Festival(
         organization_id=user.organization_id,
         name=data["name"],
