@@ -1,5 +1,9 @@
 from datetime import datetime
 from app.extensions import db
+import re
+
+def slugify(text):
+    return re.sub(r'[^a-z0-9]+', '-', text.lower()).strip('-')
 
 class Event(db.Model):
     __tablename__ = "event"
@@ -14,6 +18,9 @@ class Event(db.Model):
 
     city = db.Column(db.String(120), nullable=False)
     venue = db.Column(db.String(150), nullable=True)
+
+    # 🔥 NUEVO
+    slug = db.Column(db.String(150), unique=True, nullable=False)
 
     start_date = db.Column(db.Date, nullable=False)
     end_date = db.Column(db.Date, nullable=False)

@@ -282,11 +282,11 @@ async function loadFestivals() {
     document.getElementById("dynamicSection").innerHTML = html;
 }
 
-function editFestival(id, name, description) {
+ async function editFestival(id, name, description) {
 
     document.getElementById("dynamicSection").innerHTML = `
         <div class="card">
-            <h3>Editar Festival</h3>
+             <h3>Editar Festival</h3>
             <input id="editName" value="${name}">
             <input id="editDesc" value="${description}">
             <button onclick="updateFestival(${id})">Guardar cambios</button>
