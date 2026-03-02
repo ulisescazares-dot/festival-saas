@@ -76,6 +76,7 @@
     <button onclick="showFestivalForm()">Crear Festival</button>
     <button onclick="showContestForm()">Crear Concurso</button>
     <button onclick="loadContests()">Ver Concursos</button>
+    <button onclick="loadFestivals()">Ver Festivales</button>
 </div>
 
 <div id="dynamicSection"></div>
@@ -250,6 +251,47 @@ async function loadData() {
             </tr>
         `;
     });
+}
+
+async function loadFestivals() {
+
+    const res = await fetch("/festivals", {
+        credentials: "include"
+    });
+
+    const data = await res.json();
+
+    let html = `<div class="card"><h3>Mis Festivales</h3>`;
+
+    data.forEach(f => {
+        html += `
+            <div style="margin-bottom:15px;">
+                <strong>${f.name}</strong><br>
+                ${f.description || ""}
+                <br><br>
+                <button onclick="editFestival(${f.id}, '${f.name}', '${f.description || ""}')">
+                    Editar
+                </button>
+            </div>
+            <hr>
+        `;
+    });
+
+    html += `</div>`;
+
+    document.getElementById("dynamicSection").innerHTML = html;
+}
+
+function editFestival(id, name, description) {
+
+    document.getElementById("dynamicSection").innerHTML = `
+        <div class="card">
+            <h3>Editar Festival</h3>
+            <input id="editName" value="${name}">
+            <input id="editDesc" value="${description}">
+            <button onclick="updateFestival(${id})">Guardar cambios</button>
+        </div>
+    `;
 }
 
 async function logout() {
