@@ -4,6 +4,7 @@ from app.extensions import db
 from datetime import datetime
 import os
 from werkzeug.utils import secure_filename
+from app.models.equipment_item import EquipmentItem
 
 public_festival_bp = Blueprint("public_festival", __name__)
 
@@ -25,7 +26,7 @@ def festival_page(slug):
 
 
 # =========================================
-# REGISTER EXHIBITOR
+# REGISTER EXHIBITOR (COMPLETO)
 # =========================================
 @public_festival_bp.route("/f/<string:slug>/register", methods=["POST"])
 def register_exhibitor(slug):
@@ -39,14 +40,15 @@ def register_exhibitor(slug):
     if not data.get("exhibitor"):
         return jsonify({"msg": "Invalid data"}), 400
 
-    # 🔥 Tomamos el primer evento del festival
+    # Tomamos el primer evento del festival
     event = festival.events[0] if festival.events else None
-
     if not event:
         return jsonify({"msg": "No event configured"}), 400
 
     exhibitor = Exhibitor(
         event_id=event.id,
+
+        # DATOS
         business_name=data["exhibitor"]["business_name"],
         legal_name=data["exhibitor"].get("legal_name"),
         rfc=data["exhibitor"].get("rfc"),
@@ -55,10 +57,38 @@ def register_exhibitor(slug):
         phone=data["exhibitor"].get("phone"),
         address=data["exhibitor"].get("address"),
         instagram=data["exhibitor"].get("instagram"),
+
+        # ELÉCTRICO
+        total_amperage=data.get("electrical", {}).get("total_amperage"),
+        voltage=data.get("electrical", {}).get("voltage"),
+        needs_220=data.get("electrical", {}).get("needs_220"),
+        own_generator=data.get("electrical", {}).get("own_generator"),
+        electrical_notes=data.get("electrical", {}).get("notes"),
+
+        # ACEPTACIONES
+        accepted_reglamento=data.get("agreement", {}).get("accepted_reglamento"),
+        accepted_carta_responsiva=data.get("agreement", {}).get("accepted_carta_responsiva"),
+        signer_name=data.get("agreement", {}).get("signer_name"),
+
+        # FIRMA
+        signature_base64=data.get("agreement", {}).get("signature_base64"),
+
         created_at=datetime.utcnow()
     )
 
     db.session.add(exhibitor)
+    db.session.commit()
+
+    # 🔥 GUARDAR EQUIPO
+    for item in data.get("equipment", []):
+        eq = EquipmentItem(
+            exhibitor_id=exhibitor.id,
+            name=item.get("name"),
+            quantity=item.get("quantity", 1),
+            watts=item.get("watts")
+        )
+        db.session.add(eq)
+
     db.session.commit()
 
     return jsonify({
