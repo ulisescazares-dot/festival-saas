@@ -73,3 +73,27 @@ def list_contests(festival_id):
         }
         for c in contests
     ])
+
+@festivals_bp.route("", methods=["GET"])
+@jwt_required()
+def list_festivals():
+
+    user_id = int(get_jwt_identity())
+    user = User.query.get(user_id)
+
+    if not user.organization_id:
+        return jsonify([])
+
+    festivals = Festival.query.filter_by(
+        organization_id=user.organization_id
+    ).all()
+
+    return jsonify([
+        {
+            "id": f.id,
+            "name": f.name,
+            "description": f.description,
+            "slug": f.slug
+        }
+        for f in festivals
+    ])
