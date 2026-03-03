@@ -36,7 +36,7 @@ def create_app():
     from app.routes.agreements import agreements_bp, public_agreements_bp
     from app.routes.main import main_bp
     from app.routes.admin_contests import admin_contests_bp
-    
+    from app.routes.public_festival import public_festival_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(festivals_bp)
@@ -49,6 +49,7 @@ def create_app():
     app.register_blueprint(public_agreements_bp)
     app.register_blueprint(main_bp)
     app.register_blueprint(admin_contests_bp)
+    app.register_blueprint(public_festival_bp)
     
 
     return app

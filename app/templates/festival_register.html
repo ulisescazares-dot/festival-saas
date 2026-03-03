@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Registro Expositor</title>
+<style>
+body{font-family:Arial;background:#f6f7fb;margin:0}
+.wrap{max-width:900px;margin:30px auto;padding:20px}
+.card{background:white;padding:20px;border-radius:12px;margin-bottom:15px;box-shadow:0 2px 10px rgba(0,0,0,.08)}
+input{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:1px solid #ddd}
+button{padding:10px 15px;border:none;border-radius:8px;background:#111;color:white;cursor:pointer}
+.ok{color:green;font-weight:bold}
+.err{color:red;font-weight:bold}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<div class="card">
+<h2>Registro de Expositor</h2>
+<div id="status"></div>
+</div>
+
+<div class="card">
+<input id="business_name" placeholder="Nombre comercial *">
+<input id="legal_name" placeholder="Razón social">
+<input id="rfc" placeholder="RFC">
+<input id="email" placeholder="Correo *">
+<input id="contact_name" placeholder="Nombre contacto *">
+<input id="phone" placeholder="Teléfono">
+<input id="address" placeholder="Dirección">
+<input id="instagram" placeholder="Instagram">
+</div>
+
+<div class="card">
+<h3>Documentos</h3>
+<label>INE (PDF)</label>
+<input type="file" id="doc_ine" accept="application/pdf">
+<label>Constancia fiscal (PDF)</label>
+<input type="file" id="doc_constancia" accept="application/pdf">
+</div>
+
+<div class="card">
+<button id="submit">Registrar</button>
+</div>
+
+</div>
+
+<script>
+
+const parts = window.location.pathname.split("/");
+const SLUG = parts[2];
+
+function setStatus(msg, ok=true){
+  document.getElementById("status").innerHTML =
+    `<div class="${ok ? 'ok' : 'err'}">${msg}</div>`;
+}
+
+document.getElementById("submit").onclick = async () => {
+
+  const payload = {
+    exhibitor:{
+      business_name: business_name.value.trim(),
+      legal_name: legal_name.value.trim(),
+      rfc: rfc.value.trim(),
+      email: email.value.trim(),
+      contact_name: contact_name.value.trim(),
+      phone: phone.value.trim(),
+      address: address.value.trim(),
+      instagram: instagram.value.trim()
+    }
+  };
+
+  if(!payload.exhibitor.business_name || !payload.exhibitor.email || !payload.exhibitor.contact_name){
+    setStatus("Faltan campos obligatorios", false);
+    return;
+  }
+
+  const r = await fetch(`/f/${SLUG}/register`, {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify(payload)
+  });
+
+  const out = await r.json();
+
+  if(!r.ok){
+    setStatus(out.msg || "Error", false);
+    return;
+  }
+
+  const exhibitorId = out.exhibitor_id;
+
+  async function upload(file, type){
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("doc_type", type);
+
+    await fetch(`/f/${SLUG}/${exhibitorId}/upload`, {
+      method:"POST",
+      body: formData
+    });
+  }
+
+  const ine = document.getElementById("doc_ine").files[0];
+  const constancia = document.getElementById("doc_constancia").files[0];
+
+  if(ine) await upload(ine, "INE");
+  if(constancia) await upload(constancia, "CONSTANCIA");
+
+  setStatus("Registrado correctamente ✅");
+
+};
+
+</script>
+</body>
+</html>
