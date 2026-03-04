@@ -6,7 +6,7 @@ import os
 from werkzeug.utils import secure_filename
 from app.models.equipment_item import EquipmentItem
 
-public_festival_bp = Blueprint("public_festival", __name__)
+public_festival_bp = Blueprint("public_sign", __name__)
 
 UPLOAD_FOLDER = "uploads"
 
@@ -22,7 +22,7 @@ def festival_page(slug):
     if not festival:
         return "Festival no encontrado", 404
 
-    return render_template("festival_register.html")
+    return render_template("public_sign.html", festival=festival)
 
 
 # =========================================
