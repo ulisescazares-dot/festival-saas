@@ -1,8 +1,10 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, send_file
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.extensions import db
 from app.models import Festival, User, Contest
 import re
+import io
+import openpyxl
 
 festivals_bp = Blueprint("festivals", __name__, url_prefix="/festivals")
 
@@ -97,3 +99,74 @@ def list_festivals():
         }
         for f in festivals
     ])
+
+@festivals_bp.route("/<int:festival_id>/exhibitors", methods=["GET"])
+@jwt_required()
+def list_exhibitors(festival_id):
+
+    user_id = int(get_jwt_identity())
+    user = User.query.get(user_id)
+
+    festival = Festival.query.filter_by(
+        id=festival_id,
+        organization_id=user.organization_id
+    ).first()
+
+    if not festival:
+        return jsonify([]), 200
+
+    exhibitors = []
+
+    for event in festival.events:
+        for ex in event.exhibitors:
+            exhibitors.append({
+                "id": ex.id,
+                "festival": festival.name,
+                "event": event.city,
+                "business_name": ex.business_name,
+                "email": ex.email,
+                "signed": bool(ex.signature_base64),
+                "total_amperage": ex.total_amperage or 0
+            })
+
+    return jsonify(exhibitors)
+
+@festivals_bp.route("/<int:festival_id>/export", methods=["GET"])
+@jwt_required()
+def export_exhibitors(festival_id):
+
+    user_id = int(get_jwt_identity())
+    user = User.query.get(user_id)
+
+    festival = Festival.query.filter_by(
+        id=festival_id,
+        organization_id=user.organization_id
+    ).first()
+
+    if not festival:
+        return jsonify({"msg": "Not found"}), 404
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.append(["Negocio", "Email", "Evento", "Firmado", "Amperaje"])
+
+    for event in festival.events:
+        for ex in event.exhibitors:
+            ws.append([
+                ex.business_name,
+                ex.email,
+                event.city,
+                "Sí" if ex.signature_base64 else "No",
+                ex.total_amperage or 0
+            ])
+
+    stream = io.BytesIO()
+    wb.save(stream)
+    stream.seek(0)
+
+    return send_file(
+        stream,
+        as_attachment=True,
+        download_name="expositores.xlsx",
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )

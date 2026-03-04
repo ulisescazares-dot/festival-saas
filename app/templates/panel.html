@@ -2,6 +2,9 @@
 <html>
 <head>
     <title>Festival SaaS - Panel</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
+
     <style>
         body { font-family: Arial; background: #f3f4f6; margin: 0; }
         header {
@@ -29,9 +32,7 @@
             cursor: pointer;
         }
 
-        button.logout {
-            background:#ef4444;
-        }
+        button.logout { background:#ef4444; }
 
         table {
             width: 95%;
@@ -58,11 +59,15 @@
             border-radius:8px;
         }
 
-        input, select {
-            padding:8px;
-            margin:5px 0;
-            width:100%;
+        input { padding:8px; margin:5px 0; width:100%; }
+
+        #metrics {
+            display:flex;
+            gap:20px;
+            margin:20px;
         }
+
+        #qr_container { margin-top:15px; }
     </style>
 </head>
 <body>
@@ -74,8 +79,6 @@
 
 <div class="actions">
     <button onclick="showFestivalForm()">Crear Festival</button>
-    <button onclick="showContestForm()">Crear Concurso</button>
-    <button onclick="loadContests()">Ver Concursos</button>
     <button onclick="loadFestivals()">Ver Festivales</button>
 </div>
 
@@ -85,7 +88,7 @@
 
 <h3 style="margin-left:20px;">Expositores</h3>
 
-<div id="metrics" style="display:flex; gap:20px; margin:20px;"></div>
+<div id="metrics"></div>
 
 <table>
     <thead>
@@ -103,12 +106,19 @@
 
 <script>
 
+// =====================
+// UTIL
+// =====================
 function getCookie(name) {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
     if (parts.length === 2) return parts.pop().split(';').shift();
 }
-async function showFestivalForm() {
+
+// =====================
+// CREAR FESTIVAL
+// =====================
+function showFestivalForm() {
     document.getElementById("dynamicSection").innerHTML = `
         <div class="card">
             <h3>Crear Festival</h3>
@@ -138,168 +148,124 @@ async function createFestival() {
 
     if(res.ok){
         alert("Festival creado");
+        loadFestivals();
     } else {
         alert("Error creando festival");
     }
 }
 
-async function showContestForm() {
-    document.getElementById("dynamicSection").innerHTML = `
-        <div class="card">
-            <h3>Crear Concurso</h3>
-            <input id="festivalId" placeholder="Festival ID">
-            <input id="contestName" placeholder="Nombre del concurso">
-            <input id="contestDesc" placeholder="Descripción">
-            <button onclick="createContest()">Guardar</button>
-        </div>
-    `;
-}
-
-async function createContest() {
-
-    const csrf = getCookie("csrf_access_token");
-
-    const festival_id = document.getElementById("festivalId").value;
-    const name = document.getElementById("contestName").value;
-    const description = document.getElementById("contestDesc").value;
-
-    const res = await fetch("/admin/contests", {
-        method: "POST",
-        credentials: "include",
-        headers: { 
-            "Content-Type": "application/json",
-            "X-CSRF-TOKEN": csrf
-        },
-        body: JSON.stringify({
-            festival_id,
-            name,
-            description
-        })
-    });
-
-    const data = await res.json();
-
-    if(res.ok){
-        alert("Concurso creado\n\nLink público:\n" + data.public_url);
-    } else {
-        alert(data.msg);
-    }
-}
-
-async function loadContests() {
-
-    const festivalId = prompt("Ingresa el ID del festival");
-
-    const res = await fetch(`/festivals/${festivalId}/contests`);
-    const data = await res.json();
-
-    let html = `<div class="card"><h3>Concursos</h3>`;
-
-    data.forEach(c => {
-        html += `
-            <p>
-                <strong>${c.name}</strong><br>
-                Público: 
-                <a href="/public/contest/${c.slug}" target="_blank">
-                    /public/contest/${c.slug}
-                </a>
-            </p>
-        `;
-    });
-
-    html += `</div>`;
-
-    document.getElementById("dynamicSection").innerHTML = html;
-}
-
-async function loadData() {
-
-    const res = await fetch("/agreements/dashboard");
-
-    if (!res.ok) {
-        window.location.href = "/auth/login-page";
-        return;
-    }
-
-    const response = await res.json();
-    const data = response.rows;
-    const metrics = response.metrics;
-    
-    document.getElementById("metrics").innerHTML = `
-        <div class="card"><strong>Total:</strong> ${metrics.total_exhibitors}</div>
-        <div class="card"><strong>Firmados:</strong> ${metrics.signed}</div>
-        <div class="card"><strong>Pendientes:</strong> ${metrics.pending}</div>
-        <div class="card"><strong>Amperaje total:</strong> ${metrics.total_amperage} A</div>
-    `;
-
-    const tableBody = document.getElementById("tableBody");
-    tableBody.innerHTML = "";
-
-    data.forEach(row => {
-        tableBody.innerHTML += `
-            <tr>
-                <td>${row.festival}</td>
-                <td>${row.event}</td>
-                <td>${row.business_name}</td>
-                <td>${row.email}</td>
-                <td class="${row.signed ? 'signed' : 'pending'}">
-                    ${row.signed ? 'Firmado' : 'Pendiente'}
-                </td>
-                <td>
-                    ${row.pdf_url ? `<a href="${row.pdf_url}" target="_blank">Ver PDF</a>` : '-'}
-                </td>
-            </tr>
-        `;
-    });
-}
-
+// =====================
+// VER FESTIVALES
+// =====================
 async function loadFestivals() {
 
-    const res = await fetch("/festivals", {
-        credentials: "include"
-    });
-
+    const res = await fetch("/festivals", { credentials: "include" });
     const data = await res.json();
 
     let html = `<div class="card"><h3>Mis Festivales</h3>`;
 
     data.forEach(f => {
+
+        const publicUrl = `${window.location.origin}/f/${f.slug}`;
+
         html += `
-            <div style="margin-bottom:15px;">
+            <div style="margin-bottom:20px;">
                 <strong>${f.name}</strong><br>
                 ${f.description || ""}
                 <br><br>
-                <button onclick="editFestival(${f.id}, '${f.name}', '${f.description || ""}')">
-                    Editar
-                </button>
+
+                <button onclick="loadExhibitors(${f.id})">Ver Expositores</button>
+                <button onclick="generateQR('${f.slug}')">Generar QR</button>
+                <button onclick="exportExcel(${f.id})">Exportar Excel</button>
+
+                <div id="qr_container_${f.id}"></div>
+                <p style="font-size:12px;color:#555;">Link público: ${publicUrl}</p>
             </div>
             <hr>
         `;
     });
 
     html += `</div>`;
-
     document.getElementById("dynamicSection").innerHTML = html;
 }
 
- async function editFestival(id, name, description) {
+// =====================
+// QR
+// =====================
+function generateQR(slug) {
 
-    document.getElementById("dynamicSection").innerHTML = `
-        <div class="card">
-             <h3>Editar Festival</h3>
-            <input id="editName" value="${name}">
-            <input id="editDesc" value="${description}">
-            <button onclick="updateFestival(${id})">Guardar cambios</button>
-        </div>
+    const url = `${window.location.origin}/f/${slug}`;
+
+    const container = document.createElement("div");
+    container.innerHTML = "";
+    new QRCode(container, {
+        text: url,
+        width: 200,
+        height: 200
+    });
+
+    document.getElementById("dynamicSection").appendChild(container);
+}
+
+// =====================
+// EXPORTAR EXCEL
+// =====================
+function exportExcel(festivalId) {
+    window.location = `/festivals/${festivalId}/export`;
+}
+
+// =====================
+// EXHIBITORS
+// =====================
+async function loadExhibitors(festivalId) {
+
+    const res = await fetch(`/festivals/${festivalId}/exhibitors`, {
+        credentials: "include"
+    });
+
+    const data = await res.json();
+
+    let total = 0;
+    let signed = 0;
+    let amperage = 0;
+
+    const tableBody = document.getElementById("tableBody");
+    tableBody.innerHTML = "";
+
+    data.forEach(ex => {
+        total++;
+        if (ex.signed) signed++;
+        amperage += ex.total_amperage;
+
+        tableBody.innerHTML += `
+            <tr>
+                <td>${ex.festival}</td>
+                <td>${ex.event}</td>
+                <td>${ex.business_name}</td>
+                <td>${ex.email}</td>
+                <td class="${ex.signed ? 'signed' : 'pending'}">
+                    ${ex.signed ? 'Firmado' : 'Pendiente'}
+                </td>
+                <td>-</td>
+            </tr>
+        `;
+    });
+
+    document.getElementById("metrics").innerHTML = `
+        <div class="card"><strong>Total:</strong> ${total}</div>
+        <div class="card"><strong>Firmados:</strong> ${signed}</div>
+        <div class="card"><strong>Pendientes:</strong> ${total - signed}</div>
+        <div class="card"><strong>Amperaje total:</strong> ${amperage} A</div>
     `;
 }
 
+// =====================
+// LOGOUT
+// =====================
 async function logout() {
     await fetch("/auth/logout", { method: "POST" });
     window.location.href = "/auth/login-page";
 }
-
-loadData();
 
 </script>
 
