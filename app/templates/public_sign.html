@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Firma de Expositor</title>
+  <title>Registro de Expositor</title>
+
   <style>
     body{font-family:system-ui,Arial;margin:0;background:#f6f7fb}
     .wrap{max-width:980px;margin:24px auto;padding:16px}
@@ -26,350 +27,263 @@
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="card">
-      <h2>Registro + Firma del Expositor</h2>
-      <div id="status"></div>
-      <div style="font-size:13px;color:#666;margin-top:6px">
-        Token: <span id="token"></span>
-      </div>
-    </div>
 
-    <div class="card">
-      <h2>Datos del Expositor</h2>
-      <div class="grid">
-        <div>
-          <label>Nombre comercial *</label>
-          <input id="business_name" placeholder="Café La Sierra" />
-        </div>
-        <div>
-          <label>Razón social</label>
-          <input id="legal_name" placeholder="Café La Sierra S.A. de C.V." />
-        </div>
-        <div>
-          <label>RFC</label>
-          <input id="rfc" placeholder="ABC010203XYZ" />
-        </div>
-        <div>
-          <label>Correo *</label>
-          <input id="email" placeholder="correo@empresa.com" />
-        </div>
-        <div>
-          <label>Nombre de contacto *</label>
-          <input id="contact_name" placeholder="María Pérez" />
-        </div>
-        <div>
-          <label>Teléfono</label>
-          <input id="phone" placeholder="6641234567" />
-        </div>
+<div class="wrap">
 
-        <div>
-          <label>Dirección (opcional)</label>
-          <input id="address" placeholder="Calle, número, ciudad" />
-        </div>
-        <div>
-          <label>Instagram (opcional)</label>
-          <input id="instagram" placeholder="@tucafe" />
-        </div>
-      </div>
-    </div>
+  <div class="card">
+    <h2>Registro + Firma del Expositor</h2>
+    <div id="status"></div>
+  </div>
 
-    <div class="card">
-      <h2>Requisitos Eléctricos</h2>
-      <div class="grid">
-        <div>
-          <label>Amperaje total estimado</label>
-          <input id="total_amperage" type="number" step="0.1" placeholder="15.5" />
-        </div>
-        <div>
-          <label>Voltaje</label>
-          <select id="voltage">
-            <option value="110">110</option>
-            <option value="220">220</option>
-          </select>
-        </div>
-        <div class="row">
-          <label style="margin:0">
-            <input id="needs_220" type="checkbox" />
-            Requiero conexión 220V
-          </label>
-        </div>
-        <div class="row">
-          <label style="margin:0">
-            <input id="own_generator" type="checkbox" />
-            Llevo mi propio generador
-          </label>
-        </div>
+  <!-- DATOS -->
+  <div class="card">
+    <h2>Datos del Expositor</h2>
+    <div class="grid">
+      <div>
+        <label>Nombre comercial *</label>
+        <input id="business_name" />
       </div>
-      <div style="margin-top:10px">
-        <label>Notas eléctricas</label>
-        <textarea id="electrical_notes" placeholder="Ej: espresso 2 grupos + refri chico..."></textarea>
+      <div>
+        <label>Razón social</label>
+        <input id="legal_name" />
       </div>
-    </div>
-
-    <div class="card">
-      <h2>Equipo que llevarás</h2>
-      <div class="row" style="margin-bottom:10px">
-        <button class="btn btn-muted" id="add_item">+ Agregar equipo</button>
+      <div>
+        <label>RFC</label>
+        <input id="rfc" />
       </div>
-
-      <table id="equipment_table">
-        <thead>
-          <tr>
-            <th>Equipo</th>
-            <th>Cantidad</th>
-            <th>Watts (opcional)</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-      <div style="font-size:12px;color:#666;margin-top:8px">
-        Tip: si no sabes watts, déjalo vacío. Con amperaje total nos basta.
+      <div>
+        <label>Correo *</label>
+        <input id="email" />
       </div>
-    </div>
-
-    <div class="card">
-      <h2>Aceptaciones</h2>
-      <div class="row">
-        <label style="margin:0">
-          <input id="accepted_reglamento" type="checkbox" />
-          Acepto el Reglamento Interno *
-        </label>
+      <div>
+        <label>Nombre de contacto *</label>
+        <input id="contact_name" />
       </div>
-      <div class="row" style="margin-top:6px">
-        <label style="margin:0">
-          <input id="accepted_carta" type="checkbox" />
-          Acepto la Carta Responsiva *
-        </label>
+      <div>
+        <label>Teléfono</label>
+        <input id="phone" />
       </div>
-      <div style="margin-top:10px">
-        <label>Nombre del firmante *</label>
-        <input id="signer_name" placeholder="Nombre completo" />
+      <div>
+        <label>Dirección</label>
+        <input id="address" />
       </div>
-    </div>
-    
-    <div class="card">
-      <h2>Documentos</h2>
-
-      <label>INE o Identificación oficial</label>
-        <input type="file" id="doc_ine" accept="application/pdf">
-
-      <label>Constancia fiscal</label>
-        <input type="file" id="doc_constancia" accept="application/pdf">
-
-      <button class="btn btn-muted" id="upload_docs">Subir documentos</button>
-    </div>
-    
-    <div class="card">
-      <h2>Firma</h2>
-      <div class="row" style="margin-bottom:10px">
-        <button class="btn btn-muted" id="clear_sig">Limpiar firma</button>
-      </div>
-      <canvas id="sig" width="900" height="220"></canvas>
-      <div style="font-size:12px;color:#666;margin-top:8px">
-        Firma con mouse o con dedo (celular).
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="row">
-        <button class="btn btn-primary" id="submit">Guardar y Firmar</button>
-        <a class="btn btn-muted" id="download_pdf" href="#" target="_blank" style="text-decoration:none;display:none">Descargar PDF</a>
+      <div>
+        <label>Instagram</label>
+        <input id="instagram" />
       </div>
     </div>
   </div>
 
+  <!-- ELECTRICOS -->
+  <div class="card">
+    <h2>Requisitos Eléctricos</h2>
+    <div class="grid">
+      <div>
+        <label>Amperaje total estimado</label>
+        <input id="total_amperage" type="number" step="0.1" />
+      </div>
+      <div>
+        <label>Voltaje</label>
+        <select id="voltage">
+          <option value="110">110</option>
+          <option value="220">220</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row">
+      <label><input id="needs_220" type="checkbox"> Requiero conexión 220V</label>
+      <label><input id="own_generator" type="checkbox"> Llevo generador</label>
+    </div>
+
+    <div>
+      <label>Notas eléctricas</label>
+      <textarea id="electrical_notes"></textarea>
+    </div>
+  </div>
+
+  <!-- EQUIPO -->
+  <div class="card">
+    <h2>Equipo que llevarás</h2>
+    <button class="btn btn-muted" id="add_item">+ Agregar equipo</button>
+
+    <table id="equipment_table">
+      <thead>
+        <tr>
+          <th>Equipo</th>
+          <th>Cantidad</th>
+          <th>Watts</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <!-- ACEPTACIONES -->
+  <div class="card">
+    <h2>Aceptaciones</h2>
+
+    <label>
+      <input id="accepted_reglamento" type="checkbox">
+      Acepto el Reglamento *
+    </label>
+
+    <label>
+      <input id="accepted_carta" type="checkbox">
+      Acepto la Carta Responsiva *
+    </label>
+
+    <label>Nombre del firmante *</label>
+    <input id="signer_name" />
+  </div>
+
+  <!-- DOCUMENTOS -->
+  <div class="card">
+    <h2>Documentos</h2>
+
+    <label>INE</label>
+    <input type="file" id="doc_ine" accept="application/pdf">
+
+    <label>Constancia fiscal</label>
+    <input type="file" id="doc_constancia" accept="application/pdf">
+  </div>
+
+  <!-- FIRMA -->
+  <div class="card">
+    <h2>Firma</h2>
+    <button class="btn btn-muted" id="clear_sig">Limpiar firma</button>
+    <canvas id="sig" width="900" height="220"></canvas>
+  </div>
+
+  <div class="card">
+    <button class="btn btn-primary" id="submit">Guardar y Firmar</button>
+  </div>
+
+</div>
+
 <script>
-  const parts = window.location.pathname.split("/");
-  const TOKEN = parts[3];
-  document.getElementById("token").textContent = TOKEN;
 
-  // ---- Canvas signature ----
-  const canvas = document.getElementById("sig");
-  const ctx = canvas.getContext("2d");
-  ctx.lineWidth = 3;
-  ctx.lineCap = "round";
+// ===== SLUG =====
+const SLUG = window.location.pathname.split("/")[2];
 
-  let drawing = false;
-  let last = null;
+let exhibitorId = null;
 
-  function pos(e){
-    const r = canvas.getBoundingClientRect();
-    const x = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
-    const y = (e.touches ? e.touches[0].clientY : e.clientY) - r.top;
-    return {x,y};
-  }
+// ===== FIRMA =====
+const canvas = document.getElementById("sig");
+const ctx = canvas.getContext("2d");
+ctx.lineWidth = 3;
+ctx.lineCap = "round";
 
-  function start(e){ drawing=true; last=pos(e); }
-  function move(e){
-    if(!drawing) return;
-    e.preventDefault();
-    const p = pos(e);
-    ctx.beginPath();
-    ctx.moveTo(last.x,last.y);
-    ctx.lineTo(p.x,p.y);
-    ctx.stroke();
-    last=p;
-  }
-  function end(){ drawing=false; last=null; }
+let drawing=false, last=null;
 
-  canvas.addEventListener("mousedown", start);
-  canvas.addEventListener("mousemove", move);
-  window.addEventListener("mouseup", end);
-
-  canvas.addEventListener("touchstart", start, {passive:false});
-  canvas.addEventListener("touchmove", move, {passive:false});
-  window.addEventListener("touchend", end);
-
-  document.getElementById("clear_sig").onclick = () => {
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+function pos(e){
+  const r=canvas.getBoundingClientRect();
+  return {
+    x:(e.touches?e.touches[0].clientX:e.clientX)-r.left,
+    y:(e.touches?e.touches[0].clientY:e.clientY)-r.top
   };
+}
+canvas.onmousedown=e=>{drawing=true;last=pos(e);}
+canvas.onmousemove=e=>{
+  if(!drawing)return;
+  const p=pos(e);
+  ctx.beginPath();
+  ctx.moveTo(last.x,last.y);
+  ctx.lineTo(p.x,p.y);
+  ctx.stroke();
+  last=p;
+}
+window.onmouseup=()=>drawing=false;
 
-  // ---- Equipment table ----
-  const tbody = document.querySelector("#equipment_table tbody");
+document.getElementById("clear_sig").onclick=()=>{
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+};
 
-  function addRow(item={name:"", quantity:1, watts:""}){
-    const tr = document.createElement("tr");
+// ===== EQUIPO =====
+const tbody=document.querySelector("#equipment_table tbody");
 
-    tr.innerHTML = `
-      <td><input class="eq_name" placeholder="Máquina espresso" value="${item.name || ""}"></td>
-      <td><input class="eq_qty" type="number" min="1" value="${item.quantity || 1}"></td>
-      <td><input class="eq_watts" type="number" min="0" placeholder="1800" value="${item.watts ?? ""}"></td>
-      <td><button class="btn btn-muted eq_del">X</button></td>
-    `;
-    tr.querySelector(".eq_del").onclick = () => tr.remove();
-    tbody.appendChild(tr);
-  }
-
-  document.getElementById("add_item").onclick = (e) => {
-    e.preventDefault();
-    addRow();
-  };
-
-  // por defecto una fila
+function addRow(){
+  const tr=document.createElement("tr");
+  tr.innerHTML=`
+    <td><input class="eq_name"></td>
+    <td><input class="eq_qty" type="number" value="1"></td>
+    <td><input class="eq_watts" type="number"></td>
+    <td><button>X</button></td>
+  `;
+  tr.querySelector("button").onclick=()=>tr.remove();
+  tbody.appendChild(tr);
+}
+addRow();
+document.getElementById("add_item").onclick=e=>{
+  e.preventDefault();
   addRow();
+};
 
-  // ---- Load current data (optional) ----
-  async function prefill(){
-    const r = await fetch(`/public/agreements/${TOKEN}/prefill`);
-    if(!r.ok) return;
-    const data = await r.json();
+// ===== SUBMIT =====
+document.getElementById("submit").onclick=async()=>{
 
-    // exhibitor
-    document.getElementById("business_name").value = data.exhibitor.business_name || "";
-    document.getElementById("legal_name").value = data.exhibitor.legal_name || "";
-    document.getElementById("rfc").value = data.exhibitor.rfc || "";
-    document.getElementById("email").value = data.exhibitor.email || "";
-    document.getElementById("contact_name").value = data.exhibitor.contact_name || "";
-    document.getElementById("phone").value = data.exhibitor.phone || "";
-    document.getElementById("address").value = data.exhibitor.address || "";
-    document.getElementById("instagram").value = data.exhibitor.instagram || "";
-
-    // electrical
-    if(data.electrical){
-      document.getElementById("total_amperage").value = data.electrical.total_amperage ?? "";
-      document.getElementById("voltage").value = data.electrical.voltage || "110";
-      document.getElementById("needs_220").checked = !!data.electrical.needs_220;
-      document.getElementById("own_generator").checked = !!data.electrical.own_generator;
-      document.getElementById("electrical_notes").value = data.electrical.notes || "";
+  const payload={
+    exhibitor:{
+      business_name:business_name.value,
+      legal_name:legal_name.value,
+      rfc:rfc.value,
+      email:email.value,
+      contact_name:contact_name.value,
+      phone:phone.value,
+      address:address.value,
+      instagram:instagram.value
+    },
+    electrical:{
+      total_amperage:total_amperage.value,
+      voltage:voltage.value,
+      needs_220:needs_220.checked,
+      own_generator:own_generator.checked,
+      notes:electrical_notes.value
+    },
+    equipment:Array.from(tbody.querySelectorAll("tr")).map(tr=>({
+      name:tr.querySelector(".eq_name").value,
+      quantity:tr.querySelector(".eq_qty").value,
+      watts:tr.querySelector(".eq_watts").value
+    })),
+    agreement:{
+      accepted_reglamento:accepted_reglamento.checked,
+      accepted_carta_responsiva:accepted_carta.checked,
+      signer_name:signer_name.value,
+      signature_base64:canvas.toDataURL("image/png")
     }
-
-    // equipment
-    if(Array.isArray(data.equipment)){
-      tbody.innerHTML = "";
-      data.equipment.forEach(addRow);
-      if(data.equipment.length === 0) addRow();
-    }
-  }
-  prefill();
-
-  function setStatus(msg, ok=true){
-    const el = document.getElementById("status");
-    el.innerHTML = `<div class="${ok ? "ok" : "err"}">${msg}</div>`;
-  }
-
-  document.getElementById("submit").onclick = async () => {
-    const payload = {
-      exhibitor: {
-        business_name: document.getElementById("business_name").value.trim(),
-        legal_name: document.getElementById("legal_name").value.trim(),
-        rfc: document.getElementById("rfc").value.trim(),
-        email: document.getElementById("email").value.trim(),
-        contact_name: document.getElementById("contact_name").value.trim(),
-        phone: document.getElementById("phone").value.trim(),
-        address: document.getElementById("address").value.trim(),
-        instagram: document.getElementById("instagram").value.trim(),
-      },
-      electrical: {
-        total_amperage: document.getElementById("total_amperage").value ? Number(document.getElementById("total_amperage").value) : null,
-        voltage: document.getElementById("voltage").value,
-        needs_220: document.getElementById("needs_220").checked,
-        own_generator: document.getElementById("own_generator").checked,
-        notes: document.getElementById("electrical_notes").value
-      },
-      equipment: Array.from(document.querySelectorAll("#equipment_table tbody tr")).map(tr => ({
-        name: tr.querySelector(".eq_name").value.trim(),
-        quantity: Number(tr.querySelector(".eq_qty").value || 1),
-        watts: tr.querySelector(".eq_watts").value ? Number(tr.querySelector(".eq_watts").value) : null
-      })).filter(x => x.name),
-      agreement: {
-        accepted_reglamento: document.getElementById("accepted_reglamento").checked,
-        accepted_carta_responsiva: document.getElementById("accepted_carta").checked,
-        signer_name: document.getElementById("signer_name").value.trim(),
-        signature_base64: canvas.toDataURL("image/png")
-      }
-    };
-
-    // Validaciones mínimas
-    if(!payload.exhibitor.business_name || !payload.exhibitor.email || !payload.exhibitor.contact_name){
-      setStatus("Faltan campos obligatorios del expositor (nombre comercial, correo, contacto).", false);
-      return;
-    }
-    if(!payload.agreement.accepted_reglamento || !payload.agreement.accepted_carta_responsiva || !payload.agreement.signer_name){
-      setStatus("Debes aceptar reglamento + carta y poner nombre del firmante.", false);
-      return;
-    }
-
-    const r = await fetch(`/public/agreements/${TOKEN}/submit`, {
-      method: "POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify(payload)
-    });
-
-    const out = await r.json().catch(()=> ({}));
-    if(!r.ok){
-      setStatus(out.msg || "Error al guardar", false);
-      return;
-    }
-
-    setStatus("Guardado y firmado correctamente ✅");
-    const a = document.getElementById("download_pdf");
-    a.href = out.pdf_download_url;
-    a.style.display = "inline-block";
-    
-  document.getElementById("upload_docs").onclick = async () => {
-
-  const ine = document.getElementById("doc_ine").files[0];
-  const constancia = document.getElementById("doc_constancia").files[0];
-
-  async function upload(file, type){
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("doc_type", type);
-
-    await fetch(`/public/agreements/${TOKEN}/upload`, {
-      method: "POST",
-      body: formData
-    });
-  }
-
-  if(ine) await upload(ine, "INE");
-  if(constancia) await upload(constancia, "CONSTANCIA");
-
-  alert("Documentos subidos");
-};  
   };
+
+  const r=await fetch(`/f/${SLUG}/register`,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(payload)
+  });
+
+  const data=await r.json();
+
+  if(!r.ok){alert(data.msg);return;}
+
+  exhibitorId=data.exhibitor_id;
+
+  // subir documentos
+  async function upload(file,type){
+    const fd=new FormData();
+    fd.append("file",file);
+    fd.append("doc_type",type);
+    await fetch(`/f/${SLUG}/${exhibitorId}/upload`,{
+      method:"POST",
+      body:fd
+    });
+  }
+
+  if(doc_ine.files[0])await upload(doc_ine.files[0],"INE");
+  if(doc_constancia.files[0])await upload(doc_constancia.files[0],"CONSTANCIA");
+
+  alert("Registro completado correctamente");
+};
+
 </script>
+
 </body>
 </html>
