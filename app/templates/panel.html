@@ -203,6 +203,49 @@ th{
 
 <script>
 
+function showCompetitionForm(festivalId){
+document.getElementById("dynamicSection").innerHTML = `
+<div class="card">
+<h3>Nueva Competencia</h3>
+<input id="competitionName" placeholder="Nombre de la competencia">
+<input id="competitionDesc" placeholder="Descripción">
+<input id="competitionPrice" type="number" placeholder="Precio (ej. 350)">
+<button class="primary" onclick="createCompetition(${festivalId})">Crear Competencia</button>
+</div>
+    `;
+}
+async function createCompetition(festivalId){
+
+    const csrf = getCookie("csrf_access_token");
+
+    const name = document.getElementById("competitionName").value;
+    const description = document.getElementById("competitionDesc").value;
+    const price = document.getElementById("competitionPrice").value;
+
+    const res = await fetch("/admin/Competitions", {
+        method:"POST",
+        credentials:"include",
+        headers:{
+            "Content-Type":"application/json",
+            "X-CSRF-TOKEN": csrf
+        },
+        body: JSON.stringify({
+            festival_id: festivalId,
+            name,
+            description,
+            price
+        })
+    });
+
+    const data = await res.json();
+
+    if(res.ok){
+        alert("Competencia creada");
+        loadFestivals();
+    }else{
+        alert(data.msg);
+    }
+}
 function showFestivalForm(){
 document.getElementById("dynamicSection").innerHTML=`
 <div class="card">
@@ -301,6 +344,41 @@ total_count.innerText=total
 signed_count.innerText=signed
 pending_count.innerText=total-signed
 amperage_total.innerText=amp+" A"
+}
+
+async function loadCompetitions(festivalId, festivalSlug){
+
+    const res = await fetch(
+        `/admin/Competitions/festival/${festivalId}`,
+        { credentials: "include" }
+    );
+
+    const data = await res.json();
+
+    let html = "<div class='card'><h4>Competencias</h4>";
+
+    if(data.length === 0){
+        html += "<p>No hay competencias aún.</p>";
+    }
+
+    data.forEach(c => {
+
+        const url = `${window.location.origin}/public/f/${festivalSlug}/competencia/${c.slug}`;
+
+        html += `
+            <div style="margin-bottom:15px;">
+                <strong>${c.name}</strong><br>
+                Precio: $${c.price} MXN<br>
+
+                <input value="${url}" readonly style="width:100%;margin-top:8px;">
+            </div>
+            <hr>
+        `;
+    });
+
+    html += "</div>";
+
+    document.getElementById(`competitions_${festivalId}`).innerHTML = html;
 }
 
 async function logout(){
