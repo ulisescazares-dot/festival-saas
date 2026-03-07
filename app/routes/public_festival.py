@@ -1,18 +1,28 @@
-from flask import Blueprint, render_template, request, jsonify
-from app.models import Festival, Exhibitor, Event, ExhibitorDocument
+from flask import Blueprint, render_template, request, jsonify, current_app
+from app.models import (
+    Festival,
+    Exhibitor,
+    Event,
+    ExhibitorDocument,
+    Competition,
+    CompetitionParticipant
+)
 from app.extensions import db
 from datetime import datetime
 import os
 from werkzeug.utils import secure_filename
-from app.models.equipment_item import EquipmentItem
+import stripe
 
-public_festival_bp = Blueprint("public_sign", __name__)
+public_festival_bp = Blueprint(
+    "public_festival",
+    __name__,
+    url_prefix="/public"
+)
 
 UPLOAD_FOLDER = "uploads"
 
-
 # =========================================
-# PAGE
+# FESTIVAL PAGE
 # =========================================
 @public_festival_bp.route("/f/<string:slug>", methods=["GET"])
 def festival_page(slug):
@@ -26,13 +36,12 @@ def festival_page(slug):
 
 
 # =========================================
-# REGISTER EXHIBITOR (COMPLETO)
+# REGISTER EXHIBITOR
 # =========================================
 @public_festival_bp.route("/f/<string:slug>/register", methods=["POST"])
 def register_exhibitor(slug):
 
     festival = Festival.query.filter_by(slug=slug).first()
-
     if not festival:
         return jsonify({"msg": "Festival not found"}), 404
 
@@ -50,13 +59,11 @@ def register_exhibitor(slug):
         phone=data["exhibitor"].get("phone"),
         address=data["exhibitor"].get("address"),
         instagram=data["exhibitor"].get("instagram"),
-
         total_amperage=data["electrical"].get("total_amperage"),
         voltage=data["electrical"].get("voltage"),
         needs_220=data["electrical"].get("needs_220"),
         own_generator=data["electrical"].get("own_generator"),
         electrical_notes=data["electrical"].get("notes"),
-
         accepted_reglamento=data["agreement"].get("accepted_reglamento"),
         accepted_carta_responsiva=data["agreement"].get("accepted_carta_responsiva"),
         signer_name=data["agreement"].get("signer_name"),
@@ -105,3 +112,117 @@ def upload_documents(slug, exhibitor_id):
     db.session.commit()
 
     return jsonify({"msg": "Documento subido"}), 201
+
+
+# =========================================
+# COMPETITION PAGE
+# =========================================
+@public_festival_bp.route("/f/<string:festival_slug>/competencia/<string:competition_slug>")
+def competition_page(festival_slug, competition_slug):
+
+    festival = Festival.query.filter_by(slug=festival_slug).first()
+    if not festival:
+        return "Festival no encontrado", 404
+
+    competition = Competition.query.filter_by(
+        festival_id=festival.id,
+        slug=competition_slug
+    ).first()
+
+    if not competition:
+        return "Competencia no encontrada", 404
+
+    return render_template(
+        "competition_register.html",
+        festival=festival,
+        competition=competition
+    )
+
+
+# =========================================
+# REGISTER COMPETITION + STRIPE
+# =========================================
+@public_festival_bp.route(
+    "/f/<string:festival_slug>/competencia/<string:competition_slug>/register",
+    methods=["POST"]
+)
+def register_competition(festival_slug, competition_slug):
+
+    stripe.api_key = current_app.config["STRIPE_SECRET_KEY"]
+
+    festival = Festival.query.filter_by(slug=festival_slug).first()
+    if not festival:
+        return jsonify({"msg": "Festival not found"}), 404
+
+    competition = Competition.query.filter_by(
+        festival_id=festival.id,
+        slug=competition_slug
+    ).first()
+
+    if not competition:
+        return jsonify({"msg": "Competition not found"}), 404
+
+    data = request.get_json()
+
+    participant = CompetitionParticipant(
+        competition_id=competition.id,
+        name=data["name"],
+        email=data["email"],
+        phone=data["phone"],
+        age=data["age"],
+        coffee_shop=data["coffee_shop"],
+        payment_status="pending"
+    )
+
+    db.session.add(participant)
+    db.session.commit()
+
+    session = stripe.checkout.Session.create(
+        payment_method_types=["card"],
+        mode="payment",
+        line_items=[{
+            "price_data": {
+                "currency": "mxn",
+                "product_data": {
+                    "name": f"Registro {competition.name}"
+                },
+                "unit_amount": 35000
+            },
+            "quantity": 1
+        }],
+        success_url=f"https://TU-DOMINIO/payment-success/{participant.id}",
+        cancel_url=f"https://TU-DOMINIO/payment-cancel"
+    )
+
+    participant.stripe_session_id = session.id
+    db.session.commit()
+
+    return jsonify({"checkout_url": session.url})
+
+
+# =========================================
+# STRIPE WEBHOOK
+# =========================================
+@public_festival_bp.route("/stripe/webhook", methods=["POST"])
+def stripe_webhook():
+
+    payload = request.data
+    sig_header = request.headers.get("Stripe-Signature")
+    endpoint_secret = current_app.config["STRIPE_WEBHOOK_SECRET"]
+
+    event = stripe.Webhook.construct_event(
+        payload, sig_header, endpoint_secret
+    )
+
+    if event["type"] == "checkout.session.completed":
+        session = event["data"]["object"]
+
+        participant = CompetitionParticipant.query.filter_by(
+            stripe_session_id=session["id"]
+        ).first()
+
+        if participant:
+            participant.payment_status = "paid"
+            db.session.commit()
+
+    return "", 200

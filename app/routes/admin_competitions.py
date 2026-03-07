@@ -49,3 +49,23 @@ def create_competition():
         "msg": "Competition created",
         "public_url": f"/f/{festival.slug}/competencia/{slug}"
     }), 201
+
+@admin_competitions_bp.route("/<int:competition_id>/participants", methods=["GET"])
+@jwt_required()
+def list_participants(competition_id):
+
+    participants = CompetitionParticipant.query.filter_by(
+        competition_id=competition_id
+    ).all()
+
+    return jsonify([
+        {
+            "name": p.name,
+            "email": p.email,
+            "phone": p.phone,
+            "age": p.age,
+            "coffee_shop": p.coffee_shop,
+            "payment_status": p.payment_status
+        }
+        for p in participants
+    ])

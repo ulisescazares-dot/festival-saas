@@ -1,270 +1,311 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Festival SaaS - Panel</title>
+<title>Festival SaaS</title>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
+<style>
+*{box-sizing:border-box}
 
-    <style>
-        body { font-family: Arial; background: #f3f4f6; margin: 0; }
-        header {
-            background: #111827;
-            color: white;
-            padding: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+body{
+    margin:0;
+    font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial;
+    background:#f5f7fa;
+}
 
-        .actions {
-            padding:20px;
-            display:flex;
-            gap:10px;
-            flex-wrap:wrap;
-        }
+/* SIDEBAR */
+.sidebar{
+    width:240px;
+    background:#0f172a;
+    height:100vh;
+    position:fixed;
+    color:white;
+    padding:25px 20px;
+}
 
-        button {
-            background: #2563eb;
-            border: none;
-            padding: 10px 15px;
-            color: white;
-            border-radius: 6px;
-            cursor: pointer;
-        }
+.sidebar h2{
+    margin:0 0 30px 0;
+    font-weight:600;
+}
 
-        button.logout { background:#ef4444; }
+.sidebar button{
+    width:100%;
+    background:none;
+    border:none;
+    color:#cbd5e1;
+    padding:12px;
+    text-align:left;
+    border-radius:8px;
+    cursor:pointer;
+    margin-bottom:8px;
+}
 
-        table {
-            width: 95%;
-            margin: 30px auto;
-            border-collapse: collapse;
-            background: white;
-        }
+.sidebar button:hover{
+    background:#1e293b;
+    color:white;
+}
 
-        th, td {
-            padding: 12px;
-            border-bottom: 1px solid #ddd;
-            text-align: left;
-        }
+/* MAIN */
+.main{
+    margin-left:240px;
+    padding:40px;
+}
 
-        th { background: #e5e7eb; }
+.topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:30px;
+}
 
-        .signed { color: green; font-weight: bold; }
-        .pending { color: red; font-weight: bold; }
+.topbar h1{
+    margin:0;
+    font-size:28px;
+    font-weight:600;
+}
 
-        .card {
-            background:white;
-            padding:20px;
-            margin:20px;
-            border-radius:8px;
-        }
+.logout{
+    background:#ef4444;
+    color:white;
+    border:none;
+    padding:10px 16px;
+    border-radius:8px;
+    cursor:pointer;
+}
 
-        input { padding:8px; margin:5px 0; width:100%; }
+/* METRICS */
+.metrics{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+    gap:20px;
+    margin-bottom:40px;
+}
 
-        #metrics {
-            display:flex;
-            gap:20px;
-            margin:20px;
-        }
+.metric-card{
+    background:white;
+    padding:25px;
+    border-radius:14px;
+    box-shadow:0 8px 20px rgba(0,0,0,0.05);
+}
 
-        #qr_container { margin-top:15px; }
-    </style>
+.metric-card h3{
+    margin:0;
+    font-size:14px;
+    color:#64748b;
+}
+
+.metric-card p{
+    margin:8px 0 0 0;
+    font-size:24px;
+    font-weight:600;
+}
+
+/* CARD */
+.card{
+    background:white;
+    padding:30px;
+    border-radius:16px;
+    box-shadow:0 10px 25px rgba(0,0,0,0.05);
+    margin-bottom:30px;
+}
+
+input{
+    width:100%;
+    padding:12px;
+    margin-bottom:15px;
+    border-radius:10px;
+    border:1px solid #e2e8f0;
+}
+
+button.primary{
+    background:#2563eb;
+    color:white;
+    border:none;
+    padding:12px 18px;
+    border-radius:10px;
+    cursor:pointer;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+th,td{
+    padding:14px;
+    border-bottom:1px solid #eee;
+}
+
+th{
+    text-align:left;
+    color:#64748b;
+    font-weight:500;
+}
+
+.signed{color:#16a34a;font-weight:600;}
+.pending{color:#dc2626;font-weight:600;}
+</style>
 </head>
 <body>
 
-<header>
-    <h2>Festival SaaS - Panel Administrador</h2>
-    <button class="logout" onclick="logout()">Cerrar sesión</button>
-</header>
+<div class="sidebar">
+<h2>Festival SaaS</h2>
+<button onclick="showFestivalForm()">Crear Festival</button>
+<button onclick="loadFestivals()">Ver Festivales</button>
+<button onclick="logout()">Cerrar sesión</button>
+</div>
 
-<div class="actions">
-    <button onclick="showFestivalForm()">Crear Festival</button>
-    <button onclick="loadFestivals()">Ver Festivales</button>
+<div class="main">
+
+<div class="topbar">
+<h1>Dashboard</h1>
+</div>
+
+<div class="metrics" id="metrics">
+<div class="metric-card">
+<h3>Total Expositores</h3>
+<p id="total_count">0</p>
+</div>
+<div class="metric-card">
+<h3>Firmados</h3>
+<p id="signed_count">0</p>
+</div>
+<div class="metric-card">
+<h3>Pendientes</h3>
+<p id="pending_count">0</p>
+</div>
+<div class="metric-card">
+<h3>Amperaje Total</h3>
+<p id="amperage_total">0 A</p>
+</div>
 </div>
 
 <div id="dynamicSection"></div>
 
-<hr>
-
-<h3 style="margin-left:20px;">Expositores</h3>
-
-<div id="metrics"></div>
-
+<div class="card">
+<h3>Expositores</h3>
 <table>
-    <thead>
-        <tr>
-            <th>Festival</th>
-            <th>Evento</th>
-            <th>Negocio</th>
-            <th>Email</th>
-            <th>Estado</th>
-            <th>PDF</th>
-        </tr>
-    </thead>
-    <tbody id="tableBody"></tbody>
+<thead>
+<tr>
+<th>Festival</th>
+<th>Evento</th>
+<th>Negocio</th>
+<th>Email</th>
+<th>Estado</th>
+</tr>
+</thead>
+<tbody id="tableBody"></tbody>
 </table>
+</div>
+
+</div>
 
 <script>
 
-// =====================
-// UTIL
-// =====================
-function getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(';').shift();
+function showFestivalForm(){
+document.getElementById("dynamicSection").innerHTML=`
+<div class="card">
+<h3>Crear Festival</h3>
+<input id="festivalName" placeholder="Nombre del festival">
+<input id="festivalDesc" placeholder="Descripción">
+<button class="primary" onclick="createFestival()">Guardar</button>
+</div>
+`
 }
 
-// =====================
-// CREAR FESTIVAL
-// =====================
-function showFestivalForm() {
-    document.getElementById("dynamicSection").innerHTML = `
-        <div class="card">
-            <h3>Crear Festival</h3>
-            <input id="festivalName" placeholder="Nombre del festival">
-            <input id="festivalDesc" placeholder="Descripción">
-            <button onclick="createFestival()">Guardar</button>
-        </div>
-    `;
+async function createFestival(){
+
+const res=await fetch("/festivals",{
+method:"POST",
+credentials:"include",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+name:festivalName.value,
+description:festivalDesc.value
+})
+})
+
+if(res.ok){
+alert("Festival creado");
+loadFestivals();
+}else{
+alert("Error");
+}
 }
 
-async function createFestival() {
+async function loadFestivals(){
 
-    const csrf = getCookie("csrf_access_token");
+const res=await fetch("/festivals",{credentials:"include"})
+const data=await res.json()
 
-    const name = document.getElementById("festivalName").value;
-    const description = document.getElementById("festivalDesc").value;
+let html=`<div class="card"><h3>Mis Festivales</h3>`
 
-    const res = await fetch("/festivals", {
-        method: "POST",
-        credentials: "include",
-        headers: { 
-            "Content-Type": "application/json",
-            "X-CSRF-TOKEN": csrf
-        },
-        body: JSON.stringify({ name, description })
-    });
+data.forEach(f=>{
+const url=`${window.location.origin}/public/f/${f.slug}`
 
-    if(res.ok){
-        alert("Festival creado");
-        loadFestivals();
-    } else {
-        alert("Error creando festival");
-    }
+html+=`
+<div style="margin-bottom:20px;">
+<strong>${f.name}</strong><br>
+${f.description||""}<br><br>
+<input value="${url}" readonly>
+<button class="primary" onclick="generateQR('${url}')">Generar QR</button>
+</div>
+<hr>
+`
+})
+
+html+=`</div>`
+dynamicSection.innerHTML=html
 }
 
-// =====================
-// VER FESTIVALES
-// =====================
-async function loadFestivals() {
-
-    const res = await fetch("/festivals", { credentials: "include" });
-    const data = await res.json();
-
-    let html = `<div class="card"><h3>Mis Festivales</h3>`;
-
-    data.forEach(f => {
-
-        const publicUrl = `${window.location.origin}/f/${f.slug}`;
-
-        html += `
-            <div style="margin-bottom:20px;">
-                <strong>${f.name}</strong><br>
-                ${f.description || ""}
-                <br><br>
-
-                <button onclick="loadExhibitors(${f.id})">Ver Expositores</button>
-                <button onclick="generateQR('${f.slug}')">Generar QR</button>
-                <button onclick="exportExcel(${f.id})">Exportar Excel</button>
-
-                <div id="qr_container_${f.id}"></div>
-                <p style="font-size:12px;color:#555;">Link público: ${publicUrl}</p>
-            </div>
-            <hr>
-        `;
-    });
-
-    html += `</div>`;
-    document.getElementById("dynamicSection").innerHTML = html;
+function generateQR(url){
+dynamicSection.innerHTML+=`<div class="card"><div id="qr"></div></div>`
+new QRCode(document.getElementById("qr"),{
+text:url,
+width:220,
+height:220
+})
 }
 
-// =====================
-// QR
-// =====================
-function generateQR(slug) {
+async function loadExhibitors(festivalId){
 
-    const url = `${window.location.origin}/f/${slug}`;
+const res=await fetch(`/festivals/${festivalId}/exhibitors`,{
+credentials:"include"
+})
 
-    const container = document.createElement("div");
-    container.innerHTML = "";
-    new QRCode(container, {
-        text: url,
-        width: 200,
-        height: 200
-    });
+const data=await res.json()
 
-    document.getElementById("dynamicSection").appendChild(container);
+let total=0,signed=0,amp=0
+tableBody.innerHTML=""
+
+data.forEach(ex=>{
+total++
+if(ex.signed) signed++
+amp+=ex.total_amperage||0
+
+tableBody.innerHTML+=`
+<tr>
+<td>${ex.festival}</td>
+<td>${ex.event}</td>
+<td>${ex.business_name}</td>
+<td>${ex.email}</td>
+<td class="${ex.signed?'signed':'pending'}">
+${ex.signed?'Firmado':'Pendiente'}
+</td>
+</tr>
+`
+})
+
+total_count.innerText=total
+signed_count.innerText=signed
+pending_count.innerText=total-signed
+amperage_total.innerText=amp+" A"
 }
 
-// =====================
-// EXPORTAR EXCEL
-// =====================
-function exportExcel(festivalId) {
-    window.location = `/festivals/${festivalId}/export`;
-}
-
-// =====================
-// EXHIBITORS
-// =====================
-async function loadExhibitors(festivalId) {
-
-    const res = await fetch(`/festivals/${festivalId}/exhibitors`, {
-        credentials: "include"
-    });
-
-    const data = await res.json();
-
-    let total = 0;
-    let signed = 0;
-    let amperage = 0;
-
-    const tableBody = document.getElementById("tableBody");
-    tableBody.innerHTML = "";
-
-    data.forEach(ex => {
-        total++;
-        if (ex.signed) signed++;
-        amperage += ex.total_amperage;
-
-        tableBody.innerHTML += `
-            <tr>
-                <td>${ex.festival}</td>
-                <td>${ex.event}</td>
-                <td>${ex.business_name}</td>
-                <td>${ex.email}</td>
-                <td class="${ex.signed ? 'signed' : 'pending'}">
-                    ${ex.signed ? 'Firmado' : 'Pendiente'}
-                </td>
-                <td>-</td>
-            </tr>
-        `;
-    });
-
-    document.getElementById("metrics").innerHTML = `
-        <div class="card"><strong>Total:</strong> ${total}</div>
-        <div class="card"><strong>Firmados:</strong> ${signed}</div>
-        <div class="card"><strong>Pendientes:</strong> ${total - signed}</div>
-        <div class="card"><strong>Amperaje total:</strong> ${amperage} A</div>
-    `;
-}
-
-// =====================
-// LOGOUT
-// =====================
-async function logout() {
-    await fetch("/auth/logout", { method: "POST" });
-    window.location.href = "/auth/login-page";
+async function logout(){
+await fetch("/auth/logout",{method:"POST"})
+window.location.href="/auth/login-page"
 }
 
 </script>

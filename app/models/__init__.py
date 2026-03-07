@@ -10,3 +10,4 @@ from .exhibitor_agreement import ExhibitorAgreement
 from .exhibitor_document import ExhibitorDocument
 from .organization import Organization
 from .competition import Competition
+from .competition_participant import CompetitionParticipant
