@@ -216,13 +216,26 @@ function getCookie(name) {
     if (parts.length === 2) return parts.pop().split(';').shift();
 }    
 
-function showCompetitionGlobalForm(){
+async function showCompetitionGlobalForm(){
+
+    const res = await fetch("/festivals", { credentials: "include" });
+    const festivals = await res.json();
+
+    let options = "";
+
+    festivals.forEach(f=>{
+        options += `<option value="${f.id}">${f.name}</option>`;
+    });
 
     document.getElementById("dynamicSection").innerHTML = `
         <div class="card">
             <h3>Nueva Competencia</h3>
 
-            <input id="competitionFestivalId" placeholder="ID del Festival">
+            <label>Festival</label>
+            <select id="competitionFestivalId">
+                ${options}
+            </select>
+
             <input id="competitionName" placeholder="Nombre de la competencia">
             <input id="competitionDesc" placeholder="Descripción">
             <input id="competitionPrice" type="number" placeholder="Precio (ej. 350)">
