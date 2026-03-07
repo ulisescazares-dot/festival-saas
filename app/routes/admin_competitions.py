@@ -1,19 +1,22 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from app.models import Contest, Festival, User
+from app.models import Competition, Festival, User
 from app.extensions import db
 import re
 
-admin_contests_bp = Blueprint("admin_contests", __name__, url_prefix="/admin/contests")
-
+admin_competitions_bp = Blueprint(
+    "admin_competitions",
+    __name__,
+    url_prefix="/admin/competitions"
+)
 
 def slugify(text):
     return re.sub(r'[^a-z0-9]+', '-', text.lower()).strip('-')
 
 
-@admin_contests_bp.route("", methods=["POST"])
+@admin_competitions_bp.route("", methods=["POST"])
 @jwt_required()
-def create_contest():
+def create_competition():
 
     user_id = int(get_jwt_identity())
     user = User.query.get(user_id)
@@ -21,7 +24,7 @@ def create_contest():
     data = request.get_json()
     festival_id = data.get("festival_id")
 
-    # 🔒 Validar que el festival pertenece a su organización
+    # Validar festival
     festival = Festival.query.filter_by(
         id=festival_id,
         organization_id=user.organization_id
@@ -32,17 +35,17 @@ def create_contest():
 
     slug = slugify(data["name"])
 
-    contest = Contest(
+    competition = Competition(
         festival_id=festival.id,
         name=data["name"],
         description=data.get("description"),
         slug=slug
     )
 
-    db.session.add(contest)
+    db.session.add(competition)
     db.session.commit()
 
     return jsonify({
-        "msg": "Contest created",
-        "public_url": f"/public/contest/{slug}"
+        "msg": "Competition created",
+        "public_url": f"/f/{festival.slug}/competencia/{slug}"
     }), 201

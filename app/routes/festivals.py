@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, send_file
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.extensions import db
-from app.models import Festival, User, Contest
+from app.models import Festival, User, Competition
 import re
 import io
 import openpyxl
@@ -50,9 +50,9 @@ def create_festival():
         "slug": f.slug
     }), 201
 
-@festivals_bp.route("/<int:festival_id>/contests", methods=["GET"])
+@festivals_bp.route("/<int:festival_id>/competitions", methods=["GET"])
 @jwt_required()
-def list_contests(festival_id):
+def list_competitions(festival_id):
 
     user_id = int(get_jwt_identity())
     user = User.query.get(user_id)
@@ -65,7 +65,7 @@ def list_contests(festival_id):
     if not festival:
         return jsonify([]), 200
 
-    contests = Contest.query.filter_by(festival_id=festival.id).all()
+    competitions = Competition.query.filter_by(festival_id=festival.id).all()
 
     return jsonify([
         {
@@ -73,7 +73,7 @@ def list_contests(festival_id):
             "name": c.name,
             "slug": c.slug
         }
-        for c in contests
+        for c in competitions
     ])
 
 @festivals_bp.route("", methods=["GET"])
