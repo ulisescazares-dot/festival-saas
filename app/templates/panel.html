@@ -151,8 +151,15 @@ th{
 
 <div class="sidebar">
 <h2>Festival SaaS</h2>
+
 <button onclick="showFestivalForm()">Crear Festival</button>
+
 <button onclick="loadFestivals()">Ver Festivales</button>
+
+<button onclick="showCompetitionGlobalForm()">
+Crear Competencia
+</button>
+
 <button onclick="logout()">Cerrar sesión</button>
 </div>
 
@@ -203,21 +210,28 @@ th{
 
 <script>
 
-function showCompetitionForm(festivalId){
-document.getElementById("dynamicSection").innerHTML = `
-<div class="card">
-<h3>Nueva Competencia</h3>
-<input id="competitionName" placeholder="Nombre de la competencia">
-<input id="competitionDesc" placeholder="Descripción">
-<input id="competitionPrice" type="number" placeholder="Precio (ej. 350)">
-<button class="primary" onclick="createCompetition(${festivalId})">Crear Competencia</button>
-</div>
+function showCompetitionGlobalForm(){
+
+    document.getElementById("dynamicSection").innerHTML = `
+        <div class="card">
+            <h3>Nueva Competencia</h3>
+
+            <input id="competitionFestivalId" placeholder="ID del Festival">
+            <input id="competitionName" placeholder="Nombre de la competencia">
+            <input id="competitionDesc" placeholder="Descripción">
+            <input id="competitionPrice" type="number" placeholder="Precio (ej. 350)">
+
+            <button class="primary" onclick="createCompetitionGlobal()">
+                Crear Competencia
+            </button>
+        </div>
     `;
 }
-async function createCompetition(festivalId){
+async function createCompetitionGlobal(){
 
     const csrf = getCookie("csrf_access_token");
 
+    const festival_id = document.getElementById("competitionFestivalId").value;
     const name = document.getElementById("competitionName").value;
     const description = document.getElementById("competitionDesc").value;
     const price = document.getElementById("competitionPrice").value;
@@ -230,7 +244,7 @@ async function createCompetition(festivalId){
             "X-CSRF-TOKEN": csrf
         },
         body: JSON.stringify({
-            festival_id: festivalId,
+            festival_id,
             name,
             description,
             price
@@ -240,12 +254,13 @@ async function createCompetition(festivalId){
     const data = await res.json();
 
     if(res.ok){
-        alert("Competencia creada");
+        alert("Competencia creada correctamente");
         loadFestivals();
     }else{
         alert(data.msg);
     }
 }
+
 function showFestivalForm(){
 document.getElementById("dynamicSection").innerHTML=`
 <div class="card">
