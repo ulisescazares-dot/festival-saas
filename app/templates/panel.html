@@ -293,22 +293,27 @@ document.getElementById("dynamicSection").innerHTML=`
 
 async function createFestival(){
 
-const res=await fetch("/festivals",{
-method:"POST",
-credentials:"include",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({
-name:festivalName.value,
-description:festivalDesc.value
-})
-})
+    const csrf = getCookie("csrf_access_token");
 
-if(res.ok){
-alert("Festival creado");
-loadFestivals();
-}else{
-alert("Error");
-}
+    const res = await fetch("/festivals",{
+        method:"POST",
+        credentials:"include",
+        headers:{
+            "Content-Type":"application/json",
+            "X-CSRF-TOKEN": csrf
+        },
+        body:JSON.stringify({
+            name:festivalName.value,
+            description:festivalDesc.value
+        })
+    })
+
+    if(res.ok){
+        alert("Festival creado");
+        loadFestivals();
+    }else{
+        alert("Error");
+    }
 }
 
 async function loadFestivals(){
