@@ -127,6 +127,35 @@ button.primary{
     cursor:pointer;
 }
 
+button.secondary{
+    background:#0ea5e9;
+    color:white;
+    border:none;
+    padding:12px 18px;
+    border-radius:10px;
+    cursor:pointer;
+    margin-left:8px;
+}
+
+button.success{
+    background:#16a34a;
+    color:white;
+    border:none;
+    padding:10px 16px;
+    border-radius:10px;
+    cursor:pointer;
+    margin-top:8px;
+}
+
+.qr-box{
+    background:#f8fafc;
+    padding:20px;
+    border-radius:14px;
+    margin-top:15px;
+    display:flex;
+    justify-content:center;
+}
+
 table{
     width:100%;
     border-collapse:collapse;
@@ -214,86 +243,129 @@ function getCookie(name) {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
     if (parts.length === 2) return parts.pop().split(';').shift();
-}    
+}
 
-async function showCompetitionGlobalForm(){
+/* ================= FESTIVALES ================= */
 
-    const res = await fetch("/festivals", { credentials: "include" });
-    const festivals = await res.json();
+async function loadFestivals(){
 
-    let options = "";
+    const res=await fetch("/festivals",{credentials:"include"})
+    const data=await res.json()
 
-    festivals.forEach(f=>{
-        options += `<option value="${f.id}">${f.name}</option>`;
-    });
+    let html=`<div class="card"><h3>Mis Festivales</h3>`
 
-    document.getElementById("dynamicSection").innerHTML = `
-        <div class="card">
-            <h3>Nueva Competencia</h3>
+    data.forEach(f=>{
 
-            <label>Festival</label>
-            <select id="competitionFestivalId">
-                ${options}
-            </select>
+        const url=`${window.location.origin}/public/f/${f.slug}`
 
-            <input id="competitionName" placeholder="Nombre de la competencia">
-            <input id="competitionDesc" placeholder="Descripción">
-            <input id="competitionPrice" type="number" placeholder="Precio (ej. 350)">
+        html+=`
+        <div style="margin-bottom:30px;">
+            <strong style="font-size:18px;">${f.name}</strong><br>
+            <span style="color:#64748b">${f.description||""}</span><br><br>
 
-            <button class="primary" onclick="createCompetitionGlobal()">
-                Crear Competencia
+            <input value="${url}" readonly>
+
+            <button class="primary" onclick="generateQR('${url}','qr_general_${f.id}')">
+                QR General
             </button>
+
+            <button class="secondary"
+            onclick="toggleCompetitions(${f.id}, '${f.slug}')">
+                Ver Competencias
+            </button>
+
+            <div id="qr_general_${f.id}" class="qr-box"></div>
+
+            <div id="competitions_${f.id}" style="margin-top:20px;"></div>
         </div>
-    `;
+        <hr>
+        `
+    })
+
+    html+=`</div>`
+    dynamicSection.innerHTML=html
 }
-async function createCompetitionGlobal(){
 
-    const csrf = getCookie("csrf_access_token");
+/* ================= QR ================= */
 
-    const festival_id = document.getElementById("competitionFestivalId").value;
-    const name = document.getElementById("competitionName").value;
-    const description = document.getElementById("competitionDesc").value;
-    const price = document.getElementById("competitionPrice").value;
+function generateQR(url, containerId){
 
-    const res = await fetch("/admin/Competitions", {
-        method:"POST",
-        credentials:"include",
-        headers:{
-            "Content-Type":"application/json",
-            "X-CSRF-TOKEN": csrf
-        },
-        body: JSON.stringify({
-            festival_id,
-            name,
-            description,
-            price
-        })
-    });
+    const container = document.getElementById(containerId)
+    container.innerHTML=""
 
-    const data = await res.json();
+    new QRCode(container,{
+        text:url,
+        width:220,
+        height:220,
+        colorDark:"#0f172a",
+        colorLight:"#ffffff",
+        correctLevel:QRCode.CorrectLevel.H
+    })
+}
 
-    if(res.ok){
-        alert("Competencia creada correctamente");
-        loadFestivals();
-    }else{
-        alert(data.msg);
+/* ================= COMPETENCIAS ================= */
+
+async function toggleCompetitions(festivalId, festivalSlug){
+
+    const container = document.getElementById(`competitions_${festivalId}`)
+
+    if(container.innerHTML !== ""){
+        container.innerHTML=""
+        return
     }
+
+    await loadCompetitions(festivalId, festivalSlug)
 }
 
-function showFestivalForm(){
-document.getElementById("dynamicSection").innerHTML=`
-<div class="card">
-<h3>Crear Festival</h3>
-<input id="festivalName" placeholder="Nombre del festival">
-<input id="festivalDesc" placeholder="Descripción">
-<button class="primary" onclick="createFestival()">Guardar</button>
-</div>
-`
+async function loadCompetitions(festivalId, festivalSlug){
+
+    const res = await fetch(
+        `/admin/Competitions/festival/${festivalId}`,
+        { credentials: "include" }
+    )
+
+    const data = await res.json()
+
+    let html = "<div class='card'><h4>Competencias</h4>"
+
+    if(data.length === 0){
+        html += "<p style='color:#64748b'>No hay competencias aún.</p>"
+    }
+
+    data.forEach(c => {
+
+        const url = `${window.location.origin}/public/f/${festivalSlug}/competencia/${c.slug}`
+
+        html += `
+            <div style="margin-bottom:25px;">
+                <strong style="font-size:16px;">${c.name}</strong><br>
+                <span style="color:#64748b">
+                    Precio: $${c.price} MXN
+                </span><br><br>
+
+                <input value="${url}" readonly>
+
+                <button class="success"
+                onclick="generateQR('${url}','qr_comp_${c.id}')">
+                    Generar QR Registro
+                </button>
+
+                <div id="qr_comp_${c.id}" class="qr-box"></div>
+            </div>
+            <hr>
+        `
+    })
+
+    html += "</div>"
+
+    document.getElementById(`competitions_${festivalId}`).innerHTML = html
 }
+
+/* ================= CREAR FESTIVAL ================= */
 
 async function createFestival(){
 
-    const csrf = getCookie("csrf_access_token");
+    const csrf = getCookie("csrf_access_token")
 
     const res = await fetch("/festivals",{
         method:"POST",
@@ -309,120 +381,54 @@ async function createFestival(){
     })
 
     if(res.ok){
-        alert("Festival creado");
-        loadFestivals();
+        alert("Festival creado")
+        loadFestivals()
     }else{
-        alert("Error");
+        alert("Error")
     }
 }
 
-async function loadFestivals(){
+/* ================= CREAR COMPETENCIA ================= */
 
-const res=await fetch("/festivals",{credentials:"include"})
-const data=await res.json()
+async function createCompetitionGlobal(){
 
-let html=`<div class="card"><h3>Mis Festivales</h3>`
+    const csrf = getCookie("csrf_access_token")
 
-data.forEach(f=>{
-const url=`${window.location.origin}/public/f/${f.slug}`
+    const festival_id = document.getElementById("competitionFestivalId").value
+    const name = document.getElementById("competitionName").value
+    const description = document.getElementById("competitionDesc").value
+    const price = document.getElementById("competitionPrice").value
 
-html+=`
-<div style="margin-bottom:20px;">
-<strong>${f.name}</strong><br>
-${f.description||""}<br><br>
-<input value="${url}" readonly>
-<button class="primary" onclick="generateQR('${url}')">Generar QR</button>
-</div>
-<hr>
-`
-})
+    const res = await fetch("/admin/Competitions", {
+        method:"POST",
+        credentials:"include",
+        headers:{
+            "Content-Type":"application/json",
+            "X-CSRF-TOKEN": csrf
+        },
+        body: JSON.stringify({
+            festival_id,
+            name,
+            description,
+            price
+        })
+    })
 
-html+=`</div>`
-dynamicSection.innerHTML=html
-}
+    const data = await res.json()
 
-function generateQR(url){
-dynamicSection.innerHTML+=`<div class="card"><div id="qr"></div></div>`
-new QRCode(document.getElementById("qr"),{
-text:url,
-width:220,
-height:220
-})
-}
-
-async function loadExhibitors(festivalId){
-
-const res=await fetch(`/festivals/${festivalId}/exhibitors`,{
-credentials:"include"
-})
-
-const data=await res.json()
-
-let total=0,signed=0,amp=0
-tableBody.innerHTML=""
-
-data.forEach(ex=>{
-total++
-if(ex.signed) signed++
-amp+=ex.total_amperage||0
-
-tableBody.innerHTML+=`
-<tr>
-<td>${ex.festival}</td>
-<td>${ex.event}</td>
-<td>${ex.business_name}</td>
-<td>${ex.email}</td>
-<td class="${ex.signed?'signed':'pending'}">
-${ex.signed?'Firmado':'Pendiente'}
-</td>
-</tr>
-`
-})
-
-total_count.innerText=total
-signed_count.innerText=signed
-pending_count.innerText=total-signed
-amperage_total.innerText=amp+" A"
-}
-
-async function loadCompetitions(festivalId, festivalSlug){
-
-    const res = await fetch(
-        `/admin/Competitions/festival/${festivalId}`,
-        { credentials: "include" }
-    );
-
-    const data = await res.json();
-
-    let html = "<div class='card'><h4>Competencias</h4>";
-
-    if(data.length === 0){
-        html += "<p>No hay competencias aún.</p>";
+    if(res.ok){
+        alert("Competencia creada correctamente")
+        loadFestivals()
+    }else{
+        alert(data.msg)
     }
-
-    data.forEach(c => {
-
-        const url = `${window.location.origin}/public/f/${festivalSlug}/competencia/${c.slug}`;
-
-        html += `
-            <div style="margin-bottom:15px;">
-                <strong>${c.name}</strong><br>
-                Precio: $${c.price} MXN<br>
-
-                <input value="${url}" readonly style="width:100%;margin-top:8px;">
-            </div>
-            <hr>
-        `;
-    });
-
-    html += "</div>";
-
-    document.getElementById(`competitions_${festivalId}`).innerHTML = html;
 }
+
+/* ================= LOGOUT ================= */
 
 async function logout(){
-await fetch("/auth/logout",{method:"POST"})
-window.location.href="/auth/login-page"
+    await fetch("/auth/logout",{method:"POST"})
+    window.location.href="/auth/login-page"
 }
 
 </script>
