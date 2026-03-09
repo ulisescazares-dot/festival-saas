@@ -424,6 +424,47 @@ async function createCompetitionGlobal(){
     }
 }
 
+async function showCompetitionGlobalForm(){
+
+    const res = await fetch("/festivals", { credentials: "include" });
+    const festivals = await res.json();
+
+    let options = "";
+
+    festivals.forEach(f=>{
+        options += `<option value="${f.id}">${f.name}</option>`;
+    });
+
+    document.getElementById("dynamicSection").innerHTML = `
+        <div class="card">
+            <h3>Nueva Competencia</h3>
+
+            <label>Festival</label>
+            <select id="competitionFestivalId">
+                ${options}
+            </select>
+
+            <input id="competitionName" placeholder="Nombre de la competencia">
+            <input id="competitionDesc" placeholder="Descripción">
+            <input id="competitionPrice" type="number" placeholder="Precio (ej. 350)">
+
+            <button class="primary" onclick="createCompetitionGlobal()">
+                Crear Competencia
+            </button>
+        </div>
+    `;
+}
+
+function showFestivalForm(){
+    document.getElementById("dynamicSection").innerHTML=`
+    <div class="card">
+        <h3>Crear Festival</h3>
+        <input id="festivalName" placeholder="Nombre del festival">
+        <input id="festivalDesc" placeholder="Descripción">
+        <button class="primary" onclick="createFestival()">Guardar</button>
+    </div>
+    `
+}
 /* ================= LOGOUT ================= */
 
 async function logout(){
