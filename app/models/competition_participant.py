@@ -20,5 +20,6 @@ class CompetitionParticipant(db.Model):
 
     payment_status = db.Column(db.String(50), default="pending")
     stripe_session_id = db.Column(db.String(200))
-
+    paid = db.Column(db.Boolean, default=False)
+    
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

@@ -56,8 +56,12 @@ async function register(){
     const data = await response.json()
 
     if(response.ok){
+
+        // Redirige a Stripe
         window.location.href = data.checkout_url
+
     } else {
+
         document.getElementById("msg").innerHTML =
             `<div class="error">${data.msg}</div>`
     }
