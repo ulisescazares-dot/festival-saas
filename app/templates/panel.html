@@ -350,6 +350,10 @@ async function loadCompetitions(festivalId, festivalSlug){
                     Generar QR Registro
                 </button>
 
+                <button class="primary" onclick="viewParticipants(${c.id})">
+                Ver Inscritos
+                </button>
+
                 <div id="qr_comp_${c.id}" class="qr-box"></div>
             </div>
             <hr>
@@ -359,6 +363,45 @@ async function loadCompetitions(festivalId, festivalSlug){
     html += "</div>"
 
     document.getElementById(`competitions_${festivalId}`).innerHTML = html
+
+async function viewParticipants(competitionId){
+
+    const res = await fetch(
+        `/admin/Competitions/${competitionId}/participants`,
+        { credentials: "include" }
+    )
+
+    const data = await res.json()
+
+    let html = `
+        <div class="card">
+        <h3>Inscritos</h3>
+        <table>
+        <tr>
+            <th>Nombre</th>
+            <th>Email</th>
+            <th>Teléfono</th>
+            <th>Cafetería</th>
+            <th>Pagado</th>
+        </tr>
+    `
+
+    data.forEach(p=>{
+        html += `
+        <tr>
+            <td>${p.name}</td>
+            <td>${p.email}</td>
+            <td>${p.phone}</td>
+            <td>${p.coffee_shop}</td>
+            <td>${p.paid ? "✅" : "❌"}</td>
+        </tr>
+        `
+    })
+
+    html += "</table></div>"
+
+    document.getElementById("dynamicSection").innerHTML = html
+}
 }
 
 /* ================= CREAR FESTIVAL ================= */

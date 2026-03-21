@@ -3,6 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.models import Competition, Festival, User
 from app.extensions import db
 import re
+from app.models import CompetitionParticipant
 
 admin_competitions_bp = Blueprint(
     "admin_competitions",
@@ -74,4 +75,36 @@ def list_competitions(festival_id):
             "price": c.price
         }
         for c in competitions
+    ])
+# ====================================
+# LISTAR PARTICIPANTES POR COMPETENCIA
+# ====================================
+@admin_competitions_bp.route("/<int:competition_id>/participants", methods=["GET"])
+@jwt_required()
+def list_participants(competition_id):
+
+    user_id = int(get_jwt_identity())
+    user = User.query.get(user_id)
+
+    competition = Competition.query.get_or_404(competition_id)
+
+    # Seguridad: validar que la competencia pertenece a la organización del usuario
+    if competition.festival.organization_id != user.organization_id:
+        return jsonify({"msg": "Not authorized"}), 403
+
+    participants = CompetitionParticipant.query.filter_by(
+        competition_id=competition_id
+    ).order_by(CompetitionParticipant.created_at.desc()).all()
+
+    return jsonify([
+        {
+            "id": p.id,
+            "name": p.name,
+            "email": p.email,
+            "phone": p.phone,
+            "coffee_shop": p.coffee_shop,
+            "paid": p.paid,
+            "created_at": p.created_at.strftime("%Y-%m-%d %H:%M")
+        }
+        for p in participants
     ])
