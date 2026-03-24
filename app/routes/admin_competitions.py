@@ -76,8 +76,10 @@ def list_competitions(festival_id):
         }
         for c in competitions
     ])
+
+
 # ====================================
-# LISTAR PARTICIPANTES POR COMPETENCIA
+# LISTAR PARTICIPANTES PAGADOS POR COMPETENCIA
 # ====================================
 @admin_competitions_bp.route("/<int:competition_id>/participants", methods=["GET"])
 @jwt_required()
@@ -92,8 +94,9 @@ def list_participants(competition_id):
     if competition.festival.organization_id != user.organization_id:
         return jsonify({"msg": "Not authorized"}), 403
 
-    participants = CompetitionParticipant.query.filter_by(
-        competition_id=competition_id
+    participants = CompetitionParticipant.query.filter(
+        CompetitionParticipant.competition_id == competition_id,
+        CompetitionParticipant.paid.is_(True)
     ).order_by(CompetitionParticipant.created_at.desc()).all()
 
     return jsonify([
