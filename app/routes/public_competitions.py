@@ -86,21 +86,30 @@ def stripe_webhook():
 
         session = event["data"]["object"]
 
-        competition_id = session["metadata"]["competition_id"]
+        if session.get("payment_status") != "paid":
+            return "", 200
+
+        competition_id = int(session["metadata"]["competition_id"])
         full_name = session["metadata"]["full_name"]
         email = session["metadata"]["email"]
         phone = session["metadata"]["phone"]
         age = session["metadata"]["age"]
         cafe = session["metadata"]["cafe"]
 
-        # 🔒 Evitar duplicado en webhook también
         existing = CompetitionParticipant.query.filter_by(
             competition_id=competition_id,
             email=email
         ).first()
 
-        if not existing:
-
+        if existing:
+            existing.name = full_name
+            existing.phone = phone
+            existing.age = int(age)
+            existing.coffee_shop = cafe
+            existing.payment_status = "paid"
+            existing.stripe_session_id = session["id"]
+            existing.paid = True
+        else:
             participant = CompetitionParticipant(
                 competition_id=competition_id,
                 name=full_name,
@@ -112,8 +121,8 @@ def stripe_webhook():
                 stripe_session_id=session["id"],
                 paid=True
             )
-
             db.session.add(participant)
-            db.session.commit()
+
+        db.session.commit()
 
     return "", 200
