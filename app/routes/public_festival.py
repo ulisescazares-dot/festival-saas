@@ -180,6 +180,7 @@ def register_competition(festival_slug, competition_slug):
     session = stripe.checkout.Session.create(
         payment_method_types=["card"],
         mode="payment",
+        customer_email=data["email"],  
         line_items=[{
             "price_data": {
                 "currency": "mxn",
@@ -190,8 +191,8 @@ def register_competition(festival_slug, competition_slug):
             },
             "quantity": 1
         }],
-        success_url=f"https://TU-DOMINIO/payment-success/{participant.id}",
-        cancel_url=f"https://TU-DOMINIO/payment-cancel"
+        success_url=f"{request.host_url}public/success",
+        cancel_url=f"{request.host_url}public/cancel"
     )
 
     participant.stripe_session_id = session.id
@@ -215,6 +216,7 @@ def stripe_webhook():
     )
 
     if event["type"] == "checkout.session.completed":
+
         session = event["data"]["object"]
 
         participant = CompetitionParticipant.query.filter_by(
@@ -223,6 +225,14 @@ def stripe_webhook():
 
         if participant:
             participant.payment_status = "paid"
+            participant.paid = True
             db.session.commit()
 
     return "", 200
+@public_festival_bp.route("/success")
+def success():
+    return "Pago confirmado ✅ Revisa tu correo"
+
+@public_festival_bp.route("/cancel")
+def cancel():
+    return "Pago cancelado ❌"
