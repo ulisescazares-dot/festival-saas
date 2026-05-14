@@ -180,14 +180,14 @@ def register_competition(festival_slug, competition_slug):
     session = stripe.checkout.Session.create(
         payment_method_types=["card"],
         mode="payment",
-        customer_email=data["email"],  
+        customer_email=data["email"],
         line_items=[{
             "price_data": {
                 "currency": "mxn",
                 "product_data": {
                     "name": f"Registro {competition.name}"
                 },
-                "unit_amount": 35000
+                "unit_amount": int(competition.price * 100)
             },
             "quantity": 1
         }],
